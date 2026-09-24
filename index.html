@@ -1,63 +1,34 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>当前 GMT 时间</title>
+  <title>Google Earth 地球</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f4f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .box {
-      background: white;
-      padding: 40px 60px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      text-align: center;
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
     }
-    h1 {
-      margin: 0 0 10px;
-      color: #333;
-      font-size: 28px;
-    }
-    #time {
-      font-size: 48px;
-      font-weight: bold;
-      color: #2563eb;
-      margin: 20px 0;
-      letter-spacing: 2px;
-    }
-    .label {
-      color: #666;
-      font-size: 16px;
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>当前 GMT / UTC 时间</h1>
-    <div id="time">加载中...</div>
-    <div class="label">Greenwich Mean Time</div>
-  </div>
-
-  <script>
-    function updateTime() {
-      const now = new Date();
-      // 转成 GMT/UTC 时间
-      const gmt = now.toUTCString().replace('GMT', 'UTC');
-      document.getElementById('time').textContent = gmt;
-    }
-
-    // 立即显示一次
-    updateTime();
-    // 每秒更新
-    setInterval(updateTime, 1000);
-  </script>
+  <!-- 嵌入 Google Earth（預設視角：地球） -->
+  <iframe 
+    src="https://earth.google.com/web/@0,0,20000000a,35y,0h,0t,0r/data=!3m1!1e3&embedded=true"
+    allowfullscreen
+    loading="lazy"
+    title="Google Earth 地球">
+  </iframe>
 </body>
 </html>
