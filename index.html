@@ -3,82 +3,412 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>世界時間</title>
+  <title>世界時間 + 日韓拼音表</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", -apple-system, sans-serif;
-      background: #fff;
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+      background: #f8f9fa;
       color: #222;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       padding: 20px;
+      min-height: 100vh;
     }
+    .header { text-align: center; margin-bottom: 25px; }
     .main-time {
-      font-size: clamp(3.8rem, 14vw, 7.5rem);
+      font-size: clamp(3.5rem, 12vw, 6.5rem);
       font-weight: 700;
       letter-spacing: -2px;
       line-height: 1;
-      margin-bottom: 8px;
     }
     .date {
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       color: #555;
-      margin-bottom: 40px;
+      margin: 8px 0 20px;
     }
     .cities {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
       justify-content: center;
-      max-width: 920px;
+      margin-bottom: 30px;
     }
     .city {
-      background: #f4f4f4;
-      padding: 12px 18px;
+      background: #fff;
+      padding: 10px 16px;
       border-radius: 8px;
       text-align: center;
-      min-width: 105px;
+      min-width: 95px;
       cursor: pointer;
-      transition: all 0.2s;
       border: 2px solid transparent;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: 0.2s;
     }
-    .city:hover {
-      background: #e8e8e8;
-    }
+    .city:hover { background: #f0f0f0; }
     .city.active {
+      border-color: #4a90e2;
+      background: #e8f0fe;
+    }
+    .city-name { font-size: 0.85rem; color: #666; }
+    .city-time { font-size: 1.15rem; font-weight: 600; margin-top: 2px; }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+    .tab {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 30px;
       background: #e0e0e0;
-      border-color: #999;
-      font-weight: 600;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
     }
-    .city-name {
-      font-size: 0.88rem;
-      color: #666;
-      margin-bottom: 3px;
+    .tab.active {
+      background: #4a90e2;
+      color: white;
     }
-    .city-time {
-      font-size: 1.25rem;
-      font-weight: 600;
+
+    .chart-section {
+      display: none;
+      max-width: 980px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+      overflow-x: auto;
     }
-    .tip {
-      margin-top: 30px;
-      font-size: 0.9rem;
-      color: #888;
+    .chart-section.active { display: block; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+      font-size: 15px;
     }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 9px 5px;
+    }
+    th { background: #4a90e2; color: white; }
+    .kana, .hangul { font-size: 20px; font-weight: bold; }
+    .romaji, .roman { font-size: 12px; color: #555; margin-top: 2px; }
+
+    .note {
+      margin-top: 18px;
+      padding: 14px 16px;
+      background: #fff8e6;
+      border-left: 4px solid #f0ad4e;
+      border-radius: 6px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #555;
+    }
+    .note strong { color: #333; }
+
+    .footer {
+      text-align: center;
+      margin-top: 35px;
+      font-size: 0.85rem;
+      color: #999;
+    }
+
+
+    /* Korean vowel reference + mobile responsive layout */
+    .korean-vowels { margin-bottom: 22px; }
+    .korean-vowels h3 { font-size: 18px; margin-bottom: 12px; text-align: left; }
+    .vowel-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+    .vowel-card { border: 1px solid #ddd; border-radius: 8px; padding: 10px 6px; text-align: center; background: #fff; }
+    .vowel-card .ko { display:block; font-size:23px; font-weight:700; line-height:1.25; }
+    .vowel-card .sound { display:block; margin-top:3px; font-size:13px; color:#666; }
+    .korean-table-wrap { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .korean-table { min-width:900px; }
+
+    @media (max-width: 700px) {
+      body { padding: 10px; }
+      .cities { gap: 6px; margin-bottom: 20px; }
+      .city { min-width: calc(25% - 6px); padding: 8px 5px; }
+      .city-name { font-size: 12px; }
+      .city-time { font-size: 14px; }
+      .tabs { gap: 7px; margin-bottom: 15px; }
+      .tab { flex: 1; padding: 10px 5px; font-size: 13px; }
+      .chart-section { padding: 12px; border-radius: 10px; }
+      .vowel-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .vowel-card { padding: 8px 4px; }
+      .vowel-card .ko { font-size: 22px; }
+      #hangul { overflow-x: hidden; }
+      #hangul .korean-table-wrap { overflow-x: auto; margin: 0 -12px; padding: 0 12px 8px; width: calc(100% + 24px); }
+      #hangul .korean-table { min-width: 720px; font-size: 13px; }
+      #hangul .korean-table th, #hangul .korean-table td { padding: 7px 4px; }
+      #hangul .hangul { font-size: 18px; }
+      #hangul .roman { font-size: 10px; }
+      .note { font-size: 13px; padding: 12px; }
+    }
+
   </style>
 </head>
 <body>
-  <div class="main-time" id="mainTime">--:--:--</div>
-  <div class="date" id="mainDate">載入中...</div>
 
-  <div class="cities" id="cities">
-    <!-- 城市会通过JS生成 -->
+  <div class="header">
+    <div class="main-time" id="mainTime">--:--:--</div>
+    <div class="date" id="mainDate">載入中...</div>
   </div>
 
-  <div class="tip">點擊下方城市可切換主時間顯示</div>
+  <div class="cities" id="cities"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('hiragana')">日語平假名</button>
+    <button class="tab" onclick="showTab('hangul')">韓語拼音表</button>
+  </div>
+
+  <!-- 日语 -->
+  <div id="hiragana" class="chart-section active">
+    <table>
+      <tr>
+        <th></th><th>あ</th><th>い</th><th>う</th><th>え</th><th>お</th>
+      </tr>
+      <tr>
+        <th>あ</th>
+        <td><div class="kana">あ</div><div class="romaji">a</div></td>
+        <td><div class="kana">い</div><div class="romaji">i</div></td>
+        <td><div class="kana">う</div><div class="romaji">u</div></td>
+        <td><div class="kana">え</div><div class="romaji">e</div></td>
+        <td><div class="kana">お</div><div class="romaji">o</div></td>
+      </tr>
+      <tr>
+        <th>か</th>
+        <td><div class="kana">か</div><div class="romaji">ka</div></td>
+        <td><div class="kana">き</div><div class="romaji">ki</div></td>
+        <td><div class="kana">く</div><div class="romaji">ku</div></td>
+        <td><div class="kana">け</div><div class="romaji">ke</div></td>
+        <td><div class="kana">こ</div><div class="romaji">ko</div></td>
+      </tr>
+      <tr>
+        <th>さ</th>
+        <td><div class="kana">さ</div><div class="romaji">sa</div></td>
+        <td><div class="kana">し</div><div class="romaji">shi</div></td>
+        <td><div class="kana">す</div><div class="romaji">su</div></td>
+        <td><div class="kana">せ</div><div class="romaji">se</div></td>
+        <td><div class="kana">そ</div><div class="romaji">so</div></td>
+      </tr>
+      <tr>
+        <th>た</th>
+        <td><div class="kana">た</div><div class="romaji">ta</div></td>
+        <td><div class="kana">ち</div><div class="romaji">chi</div></td>
+        <td><div class="kana">つ</div><div class="romaji">tsu</div></td>
+        <td><div class="kana">て</div><div class="romaji">te</div></td>
+        <td><div class="kana">と</div><div class="romaji">to</div></td>
+      </tr>
+      <tr>
+        <th>な</th>
+        <td><div class="kana">な</div><div class="romaji">na</div></td>
+        <td><div class="kana">に</div><div class="romaji">ni</div></td>
+        <td><div class="kana">ぬ</div><div class="romaji">nu</div></td>
+        <td><div class="kana">ね</div><div class="romaji">ne</div></td>
+        <td><div class="kana">の</div><div class="romaji">no</div></td>
+      </tr>
+      <tr>
+        <th>は</th>
+        <td><div class="kana">は</div><div class="romaji">ha</div></td>
+        <td><div class="kana">ひ</div><div class="romaji">hi</div></td>
+        <td><div class="kana">ふ</div><div class="romaji">fu</div></td>
+        <td><div class="kana">へ</div><div class="romaji">he</div></td>
+        <td><div class="kana">ほ</div><div class="romaji">ho</div></td>
+      </tr>
+      <tr>
+        <th>ま</th>
+        <td><div class="kana">ま</div><div class="romaji">ma</div></td>
+        <td><div class="kana">み</div><div class="romaji">mi</div></td>
+        <td><div class="kana">む</div><div class="romaji">mu</div></td>
+        <td><div class="kana">め</div><div class="romaji">me</div></td>
+        <td><div class="kana">も</div><div class="romaji">mo</div></td>
+      </tr>
+      <tr>
+        <th>や</th>
+        <td><div class="kana">や</div><div class="romaji">ya</div></td>
+        <td></td>
+        <td><div class="kana">ゆ</div><div class="romaji">yu</div></td>
+        <td></td>
+        <td><div class="kana">よ</div><div class="romaji">yo</div></td>
+      </tr>
+      <tr>
+        <th>ら</th>
+        <td><div class="kana">ら</div><div class="romaji">ra</div></td>
+        <td><div class="kana">り</div><div class="romaji">ri</div></td>
+        <td><div class="kana">る</div><div class="romaji">ru</div></td>
+        <td><div class="kana">れ</div><div class="romaji">re</div></td>
+        <td><div class="kana">ろ</div><div class="romaji">ro</div></td>
+      </tr>
+      <tr>
+        <th>わ</th>
+        <td><div class="kana">わ</div><div class="romaji">wa</div></td>
+        <td></td><td></td><td></td>
+        <td><div class="kana">を</div><div class="romaji">wo</div></td>
+      </tr>
+      <tr>
+        <th>ん</th>
+        <td colspan="5"><div class="kana">ん</div><div class="romaji">n</div></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 韩语（更新版） -->
+  <div id="hangul" class="chart-section">
+    <div class="korean-vowels">
+      <h3>韓語母音</h3>
+      <div class="vowel-grid">
+        <div class="vowel-card"><span class="ko">ㅏ</span><span class="sound">a</span></div>
+        <div class="vowel-card"><span class="ko">ㅑ</span><span class="sound">ya</span></div>
+        <div class="vowel-card"><span class="ko">ㅐ</span><span class="sound">ae</span></div>
+        <div class="vowel-card"><span class="ko">ㅒ</span><span class="sound">yae</span></div>
+        <div class="vowel-card"><span class="ko">ㅓ</span><span class="sound">eo</span></div>
+        <div class="vowel-card"><span class="ko">ㅔ</span><span class="sound">e</span></div>
+        <div class="vowel-card"><span class="ko">ㅕ</span><span class="sound">yeo</span></div>
+        <div class="vowel-card"><span class="ko">ㅖ</span><span class="sound">ye</span></div>
+        <div class="vowel-card"><span class="ko">ㅗ</span><span class="sound">o</span></div>
+        <div class="vowel-card"><span class="ko">ㅘ</span><span class="sound">wa</span></div>
+        <div class="vowel-card"><span class="ko">ㅙ</span><span class="sound">wae</span></div>
+        <div class="vowel-card"><span class="ko">ㅚ</span><span class="sound">oe</span></div>
+        <div class="vowel-card"><span class="ko">ㅛ</span><span class="sound">yo</span></div>
+        <div class="vowel-card"><span class="ko">ㅜ</span><span class="sound">u</span></div>
+        <div class="vowel-card"><span class="ko">ㅝ</span><span class="sound">wo</span></div>
+        <div class="vowel-card"><span class="ko">ㅞ</span><span class="sound">we</span></div>
+        <div class="vowel-card"><span class="ko">ㅟ</span><span class="sound">wi</span></div>
+        <div class="vowel-card"><span class="ko">ㅠ</span><span class="sound">yu</span></div>
+        <div class="vowel-card"><span class="ko">ㅡ</span><span class="sound">eu</span></div>
+        <div class="vowel-card"><span class="ko">ㅢ</span><span class="sound">ui</span></div>
+        <div class="vowel-card"><span class="ko">ㅣ</span><span class="sound">i</span></div>
+      </div>
+    </div>
+
+    <div class="korean-table-wrap">
+    <table class="korean-table">
+      <tr>
+        <th>子音</th>
+        <th>ㅏ a</th><th>ㅑ ya</th><th>ㅓ eo</th><th>ㅕ yeo</th>
+        <th>ㅗ o</th><th>ㅛ yo</th><th>ㅜ u</th><th>ㅠ yu</th>
+        <th>ㅡ eu</th><th>ㅣ i</th>
+      </tr>
+      <tr>
+        <th>ㄱ<br><small>g / k</small></th>
+        <td><div class="hangul">가</div><div class="roman">ga</div></td>
+        <td><div class="hangul">갸</div><div class="roman">gya</div></td>
+        <td><div class="hangul">거</div><div class="roman">geo</div></td>
+        <td><div class="hangul">겨</div><div class="roman">gyeo</div></td>
+        <td><div class="hangul">고</div><div class="roman">go</div></td>
+        <td><div class="hangul">교</div><div class="roman">gyo</div></td>
+        <td><div class="hangul">구</div><div class="roman">gu</div></td>
+        <td><div class="hangul">규</div><div class="roman">gyu</div></td>
+        <td><div class="hangul">그</div><div class="roman">geu</div></td>
+        <td><div class="hangul">기</div><div class="roman">gi</div></td>
+      </tr>
+      <tr>
+        <th>ㄴ<br><small>n</small></th>
+        <td><div class="hangul">나</div><div class="roman">na</div></td>
+        <td><div class="hangul">냐</div><div class="roman">nya</div></td>
+        <td><div class="hangul">너</div><div class="roman">neo</div></td>
+        <td><div class="hangul">녀</div><div class="roman">nyeo</div></td>
+        <td><div class="hangul">노</div><div class="roman">no</div></td>
+        <td><div class="hangul">뇨</div><div class="roman">nyo</div></td>
+        <td><div class="hangul">누</div><div class="roman">nu</div></td>
+        <td><div class="hangul">뉴</div><div class="roman">nyu</div></td>
+        <td><div class="hangul">느</div><div class="roman">neu</div></td>
+        <td><div class="hangul">니</div><div class="roman">ni</div></td>
+      </tr>
+      <tr>
+        <th>ㄷ<br><small>d / t</small></th>
+        <td><div class="hangul">다</div><div class="roman">da</div></td>
+        <td><div class="hangul">댜</div><div class="roman">dya</div></td>
+        <td><div class="hangul">더</div><div class="roman">deo</div></td>
+        <td><div class="hangul">뎌</div><div class="roman">dyeo</div></td>
+        <td><div class="hangul">도</div><div class="roman">do</div></td>
+        <td><div class="hangul">됴</div><div class="roman">dyo</div></td>
+        <td><div class="hangul">두</div><div class="roman">du</div></td>
+        <td><div class="hangul">듀</div><div class="roman">dyu</div></td>
+        <td><div class="hangul">드</div><div class="roman">deu</div></td>
+        <td><div class="hangul">디</div><div class="roman">di</div></td>
+      </tr>
+      <tr>
+        <th>ㄹ<br><small>r / l</small></th>
+        <td><div class="hangul">라</div><div class="roman">ra</div></td>
+        <td><div class="hangul">랴</div><div class="roman">rya</div></td>
+        <td><div class="hangul">러</div><div class="roman">reo</div></td>
+        <td><div class="hangul">려</div><div class="roman">ryeo</div></td>
+        <td><div class="hangul">로</div><div class="roman">ro</div></td>
+        <td><div class="hangul">료</div><div class="roman">ryo</div></td>
+        <td><div class="hangul">루</div><div class="roman">ru</div></td>
+        <td><div class="hangul">류</div><div class="roman">ryu</div></td>
+        <td><div class="hangul">르</div><div class="roman">reu</div></td>
+        <td><div class="hangul">리</div><div class="roman">ri</div></td>
+      </tr>
+      <tr>
+        <th>ㅁ<br><small>m</small></th>
+        <td><div class="hangul">마</div><div class="roman">ma</div></td>
+        <td><div class="hangul">먀</div><div class="roman">mya</div></td>
+        <td><div class="hangul">머</div><div class="roman">meo</div></td>
+        <td><div class="hangul">며</div><div class="roman">myeo</div></td>
+        <td><div class="hangul">모</div><div class="roman">mo</div></td>
+        <td><div class="hangul">묘</div><div class="roman">myo</div></td>
+        <td><div class="hangul">무</div><div class="roman">mu</div></td>
+        <td><div class="hangul">뮤</div><div class="roman">myu</div></td>
+        <td><div class="hangul">므</div><div class="roman">meu</div></td>
+        <td><div class="hangul">미</div><div class="roman">mi</div></td>
+      </tr>
+      <tr>
+        <th>ㅂ<br><small>b / p</small></th>
+        <td><div class="hangul">바</div><div class="roman">ba</div></td>
+        <td><div class="hangul">뱌</div><div class="roman">bya</div></td>
+        <td><div class="hangul">버</div><div class="roman">beo</div></td>
+        <td><div class="hangul">벼</div><div class="roman">byeo</div></td>
+        <td><div class="hangul">보</div><div class="roman">bo</div></td>
+        <td><div class="hangul">뵤</div><div class="roman">byo</div></td>
+        <td><div class="hangul">부</div><div class="roman">bu</div></td>
+        <td><div class="hangul">뷰</div><div class="roman">byu</div></td>
+        <td><div class="hangul">브</div><div class="roman">beu</div></td>
+        <td><div class="hangul">비</div><div class="roman">bi</div></td>
+      </tr>
+      <tr>
+        <th>ㅅ<br><small>s / t</small></th>
+        <td><div class="hangul">사</div><div class="roman">sa</div></td>
+        <td><div class="hangul">샤</div><div class="roman">sya</div></td>
+        <td><div class="hangul">서</div><div class="roman">seo</div></td>
+        <td><div class="hangul">셔</div><div class="roman">syeo</div></td>
+        <td><div class="hangul">소</div><div class="roman">so</div></td>
+        <td><div class="hangul">쇼</div><div class="roman">syo</div></td>
+        <td><div class="hangul">수</div><div class="roman">su</div></td>
+        <td><div class="hangul">슈</div><div class="roman">syu</div></td>
+        <td><div class="hangul">스</div><div class="roman">seu</div></td>
+        <td><div class="hangul">시</div><div class="roman">si</div></td>
+      </tr>
+      <tr>
+        <th>ㅇ<br><small>- / ng</small></th>
+        <td><div class="hangul">아</div><div class="roman">a</div></td>
+        <td><div class="hangul">야</div><div class="roman">ya</div></td>
+        <td><div class="hangul">어</div><div class="roman">eo</div></td>
+        <td><div class="hangul">여</div><div class="roman">yeo</div></td>
+        <td><div class="hangul">오</div><div class="roman">o</div></td>
+        <td><div class="hangul">요</div><div class="roman">yo</div></td>
+        <td><div class="hangul">우</div><div class="roman">u</div></td>
+        <td><div class="hangul">유</div><div class="roman">yu</div></td>
+        <td><div class="hangul">으</div><div class="roman">eu</div></td>
+        <td><div class="hangul">이</div><div class="roman">i</div></td>
+      </tr>
+    </table>
+    </div>
+
+    <div class="note">
+      <strong>讀法說明：</strong><br>
+      • 子音在<strong>開頭</strong>和<strong>結尾（收音）</strong>時，讀法常不同：<br>
+      ㄱ = g（開頭） / k（結尾）　　ㄷ = d / t　　ㅂ = b / p　　ㄹ = r / l　　ㅅ = s / t<br>
+      • ㅇ 在開頭不發音，在結尾發 ng 音。<br>
+      • 雙寫子音（ㄲ、ㄸ、ㅃ、ㅆ、ㅉ）只用於開頭，發音更硬。
+    </div>
+  </div>
+
+  <div class="footer">點擊城市可切換主時間 · 點擊上方按鈕切換拼音表</div>
 
   <script>
     const cities = [
@@ -95,15 +425,11 @@
     let currentTimezone = 'Asia/Tokyo';
     let currentCityName = '東京';
 
-    // 生成城市按钮
     const citiesContainer = document.getElementById('cities');
     cities.forEach(city => {
       const div = document.createElement('div');
       div.className = 'city' + (city.timezone === currentTimezone ? ' active' : '');
-      div.innerHTML = `
-        <div class="city-name">${city.name}</div>
-        <div class="city-time" id="${city.id}">--:--</div>
-      `;
+      div.innerHTML = `<div class="city-name">${city.name}</div><div class="city-time" id="${city.id}">--:--</div>`;
       div.onclick = () => {
         currentTimezone = city.timezone;
         currentCityName = city.name;
@@ -116,27 +442,27 @@
 
     function updateTime() {
       const now = new Date();
-
-      // 主时间
-      const timeOptions = { timeZone: currentTimezone, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
-      document.getElementById('mainTime').textContent = now.toLocaleTimeString('zh-TW', timeOptions);
-
-      // 日期
-      const dateOptions = { timeZone: currentTimezone, year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-      document.getElementById('mainDate').textContent = `${currentCityName}　${now.toLocaleDateString('zh-TW', dateOptions)}`;
-
-      // 更新所有城市时间
+      document.getElementById('mainTime').textContent = now.toLocaleTimeString('zh-TW', {
+        timeZone: currentTimezone, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+      document.getElementById('mainDate').textContent = `${currentCityName}　${now.toLocaleDateString('zh-TW', {
+        timeZone: currentTimezone, year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+      })}`;
       cities.forEach(city => {
         const el = document.getElementById(city.id);
         if (el) {
           el.textContent = now.toLocaleTimeString('zh-TW', {
-            timeZone: city.timezone,
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit'
+            timeZone: city.timezone, hour12: false, hour: '2-digit', minute: '2-digit'
           });
         }
       });
+    }
+
+    function showTab(id) {
+      document.querySelectorAll('.chart-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      event.target.classList.add('active');
     }
 
     updateTime();
