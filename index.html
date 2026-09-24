@@ -5,14 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>世界時間</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", -apple-system, sans-serif;
-      background: #ffffff;
+      background: #fff;
       color: #222;
       min-height: 100vh;
       display: flex;
@@ -22,49 +18,55 @@
       padding: 20px;
     }
     .main-time {
-      font-size: clamp(4rem, 15vw, 8rem);
+      font-size: clamp(3.8rem, 14vw, 7.5rem);
       font-weight: 700;
       letter-spacing: -2px;
       line-height: 1;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .date {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       color: #555;
-      margin-bottom: 50px;
+      margin-bottom: 40px;
     }
     .cities {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
+      gap: 12px;
       justify-content: center;
-      max-width: 900px;
+      max-width: 920px;
     }
     .city {
-      background: #f5f5f5;
-      padding: 12px 20px;
+      background: #f4f4f4;
+      padding: 12px 18px;
       border-radius: 8px;
       text-align: center;
-      min-width: 110px;
+      min-width: 105px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+    .city:hover {
+      background: #e8e8e8;
     }
     .city.active {
       background: #e0e0e0;
+      border-color: #999;
       font-weight: 600;
     }
     .city-name {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: #666;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .city-time {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: 600;
     }
-    .footer {
-      position: absolute;
-      bottom: 20px;
-      font-size: 0.85rem;
-      color: #999;
+    .tip {
+      margin-top: 30px;
+      font-size: 0.9rem;
+      color: #888;
     }
   </style>
 </head>
@@ -72,54 +74,69 @@
   <div class="main-time" id="mainTime">--:--:--</div>
   <div class="date" id="mainDate">載入中...</div>
 
-  <div class="cities">
-    <div class="city">
-      <div class="city-name">洛杉磯</div>
-      <div class="city-time" id="la">--:--</div>
-    </div>
-    <div class="city">
-      <div class="city-name">紐約</div>
-      <div class="city-time" id="ny">--:--</div>
-    </div>
-    <div class="city">
-      <div class="city-name">倫敦</div>
-      <div class="city-time" id="london">--:--</div>
-    </div>
-    <div class="city">
-      <div class="city-name">巴黎</div>
-      <div class="city-time" id="paris">--:--</div>
-    </div>
-    <div class="city">
-      <div class="city-name">北京</div>
-      <div class="city-time" id="beijing">--:--</div>
-    </div>
-    <div class="city active">
-      <div class="city-name">東京</div>
-      <div class="city-time" id="tokyo">--:--</div>
-    </div>
+  <div class="cities" id="cities">
+    <!-- 城市会通过JS生成 -->
   </div>
 
-  <div class="footer">時間每秒自動更新</div>
+  <div class="tip">點擊下方城市可切換主時間顯示</div>
 
   <script>
+    const cities = [
+      { name: '洛杉磯', timezone: 'America/Los_Angeles', id: 'la' },
+      { name: '紐約', timezone: 'America/New_York', id: 'ny' },
+      { name: '倫敦', timezone: 'Europe/London', id: 'london' },
+      { name: '巴黎', timezone: 'Europe/Paris', id: 'paris' },
+      { name: '北京', timezone: 'Asia/Shanghai', id: 'beijing' },
+      { name: '香港', timezone: 'Asia/Hong_Kong', id: 'hk' },
+      { name: '東京', timezone: 'Asia/Tokyo', id: 'tokyo' },
+      { name: '悉尼', timezone: 'Australia/Sydney', id: 'sydney' }
+    ];
+
+    let currentTimezone = 'Asia/Tokyo';
+    let currentCityName = '東京';
+
+    // 生成城市按钮
+    const citiesContainer = document.getElementById('cities');
+    cities.forEach(city => {
+      const div = document.createElement('div');
+      div.className = 'city' + (city.timezone === currentTimezone ? ' active' : '');
+      div.innerHTML = `
+        <div class="city-name">${city.name}</div>
+        <div class="city-time" id="${city.id}">--:--</div>
+      `;
+      div.onclick = () => {
+        currentTimezone = city.timezone;
+        currentCityName = city.name;
+        document.querySelectorAll('.city').forEach(c => c.classList.remove('active'));
+        div.classList.add('active');
+        updateTime();
+      };
+      citiesContainer.appendChild(div);
+    });
+
     function updateTime() {
       const now = new Date();
 
-      // 主時間（東京）
-      const tokyoOptions = { timeZone: 'Asia/Tokyo', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
-      document.getElementById('mainTime').textContent = now.toLocaleTimeString('zh-TW', tokyoOptions);
+      // 主时间
+      const timeOptions = { timeZone: currentTimezone, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+      document.getElementById('mainTime').textContent = now.toLocaleTimeString('zh-TW', timeOptions);
 
       // 日期
-      const dateOptions = { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-      document.getElementById('mainDate').textContent = now.toLocaleDateString('zh-TW', dateOptions);
+      const dateOptions = { timeZone: currentTimezone, year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      document.getElementById('mainDate').textContent = `${currentCityName}　${now.toLocaleDateString('zh-TW', dateOptions)}`;
 
-      // 各城市時間
-      document.getElementById('la').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'America/Los_Angeles', hour12: false, hour: '2-digit', minute: '2-digit' });
-      document.getElementById('ny').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit' });
-      document.getElementById('london').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'Europe/London', hour12: false, hour: '2-digit', minute: '2-digit' });
-      document.getElementById('paris').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'Europe/Paris', hour12: false, hour: '2-digit', minute: '2-digit' });
-      document.getElementById('beijing').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'Asia/Shanghai', hour12: false, hour: '2-digit', minute: '2-digit' });
-      document.getElementById('tokyo').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'Asia/Tokyo', hour12: false, hour: '2-digit', minute: '2-digit' });
+      // 更新所有城市时间
+      cities.forEach(city => {
+        const el = document.getElementById(city.id);
+        if (el) {
+          el.textContent = now.toLocaleTimeString('zh-TW', {
+            timeZone: city.timezone,
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        }
+      });
     }
 
     updateTime();
