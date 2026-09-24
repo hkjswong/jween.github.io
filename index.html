@@ -1,62 +1,128 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>当前 GMT 时间</title>
+  <title>世界時間</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f4f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .box {
-      background: white;
-      padding: 40px 60px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    body {
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", -apple-system, sans-serif;
+      background: #ffffff;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .main-time {
+      font-size: clamp(4rem, 15vw, 8rem);
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+    .date {
+      font-size: 1.3rem;
+      color: #555;
+      margin-bottom: 50px;
+    }
+    .cities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      max-width: 900px;
+    }
+    .city {
+      background: #f5f5f5;
+      padding: 12px 20px;
+      border-radius: 8px;
       text-align: center;
+      min-width: 110px;
     }
-    h1 {
-      margin: 0 0 10px;
-      color: #333;
-      font-size: 28px;
+    .city.active {
+      background: #e0e0e0;
+      font-weight: 600;
     }
-    #time {
-      font-size: 48px;
-      font-weight: bold;
-      color: #2563eb;
-      margin: 20px 0;
-      letter-spacing: 2px;
-    }
-    .label {
+    .city-name {
+      font-size: 0.9rem;
       color: #666;
-      font-size: 16px;
+      margin-bottom: 4px;
+    }
+    .city-time {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    .footer {
+      position: absolute;
+      bottom: 20px;
+      font-size: 0.85rem;
+      color: #999;
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>当前 GMT / UTC 时间</h1>
-    <div id="time">加载中...</div>
-    <div class="label">Greenwich Mean Time</div>
+  <div class="main-time" id="mainTime">--:--:--</div>
+  <div class="date" id="mainDate">載入中...</div>
+
+  <div class="cities">
+    <div class="city">
+      <div class="city-name">洛杉磯</div>
+      <div class="city-time" id="la">--:--</div>
+    </div>
+    <div class="city">
+      <div class="city-name">紐約</div>
+      <div class="city-time" id="ny">--:--</div>
+    </div>
+    <div class="city">
+      <div class="city-name">倫敦</div>
+      <div class="city-time" id="london">--:--</div>
+    </div>
+    <div class="city">
+      <div class="city-name">巴黎</div>
+      <div class="city-time" id="paris">--:--</div>
+    </div>
+    <div class="city">
+      <div class="city-name">北京</div>
+      <div class="city-time" id="beijing">--:--</div>
+    </div>
+    <div class="city active">
+      <div class="city-name">東京</div>
+      <div class="city-time" id="tokyo">--:--</div>
+    </div>
   </div>
+
+  <div class="footer">時間每秒自動更新</div>
 
   <script>
     function updateTime() {
       const now = new Date();
-      // 转成 GMT/UTC 时间
-      const gmt = now.toUTCString().replace('GMT', 'UTC');
-      document.getElementById('time').textContent = gmt;
+
+      // 主時間（東京）
+      const tokyoOptions = { timeZone: 'Asia/Tokyo', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+      document.getElementById('mainTime').textContent = now.toLocaleTimeString('zh-TW', tokyoOptions);
+
+      // 日期
+      const dateOptions = { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      document.getElementById('mainDate').textContent = now.toLocaleDateString('zh-TW', dateOptions);
+
+      // 各城市時間
+      document.getElementById('la').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'America/Los_Angeles', hour12: false, hour: '2-digit', minute: '2-digit' });
+      document.getElementById('ny').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit' });
+      document.getElementById('london').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'Europe/London', hour12: false, hour: '2-digit', minute: '2-digit' });
+      document.getElementById('paris').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'Europe/Paris', hour12: false, hour: '2-digit', minute: '2-digit' });
+      document.getElementById('beijing').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'Asia/Shanghai', hour12: false, hour: '2-digit', minute: '2-digit' });
+      document.getElementById('tokyo').textContent = now.toLocaleTimeString('zh-TW', { timeZone: 'Asia/Tokyo', hour12: false, hour: '2-digit', minute: '2-digit' });
     }
 
-    // 立即显示一次
     updateTime();
-    // 每秒更新
     setInterval(updateTime, 1000);
   </script>
 </body>
